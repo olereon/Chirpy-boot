@@ -58,3 +58,23 @@ WHERE refresh_tokens.token = $1
 UPDATE refresh_tokens 
 SET revoked_at = NOW(), updated_at = NOW()
 WHERE token = $1;
+
+-- name: UpdateUser :one
+UPDATE users
+SET email = $2, hashed_password = $3, updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteChirp :exec
+DELETE FROM chirps
+WHERE id = $1 AND user_id = $2;
+
+-- name: UpgradeUserToChirpyRed :exec
+UPDATE users
+SET is_chirpy_red = true, updated_at = NOW()
+WHERE id = $1;
+
+-- name: GetChirpsByAuthor :many
+SELECT * FROM chirps
+WHERE user_id = $1
+ORDER BY created_at ASC;
