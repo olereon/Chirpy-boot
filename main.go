@@ -153,6 +153,12 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 
 func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
 	authorIDString := r.URL.Query().Get("author_id")
+	sortOrder := r.URL.Query().Get("sort")
+	
+	// Default to ascending if no sort parameter or invalid value
+	if sortOrder != "desc" {
+		sortOrder = "asc"
+	}
 	
 	var dbChirps []database.Chirp
 	var err error
@@ -165,11 +171,19 @@ func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		
-		// Get chirps by specific author
-		dbChirps, err = cfg.DB.GetChirpsByAuthor(r.Context(), authorID)
+		// Get chirps by specific author with sorting
+		if sortOrder == "desc" {
+			dbChirps, err = cfg.DB.GetChirpsByAuthorDesc(r.Context(), authorID)
+		} else {
+			dbChirps, err = cfg.DB.GetChirpsByAuthor(r.Context(), authorID)
+		}
 	} else {
-		// Get all chirps
-		dbChirps, err = cfg.DB.GetAllChirps(r.Context())
+		// Get all chirps with sorting
+		if sortOrder == "desc" {
+			dbChirps, err = cfg.DB.GetAllChirpsDesc(r.Context())
+		} else {
+			dbChirps, err = cfg.DB.GetAllChirps(r.Context())
+		}
 	}
 	
 	if err != nil {
